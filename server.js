@@ -544,8 +544,15 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Serve static files (frontend)
-app.use(express.static('.'));
+
+// Serve static files (frontend build)
+const buildPath = path.join(__dirname, 'dist');
+app.use(express.static(buildPath));
+
+// Fallback: serve index.html for any route not starting with /api
+app.get(/^\/(?!api).*/, (req, res) => {
+  res.sendFile(path.join(buildPath, 'index.html'));
+});
 
 // Start server
 app.listen(PORT, () => {

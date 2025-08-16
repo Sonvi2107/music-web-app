@@ -546,8 +546,6 @@ app.get('/api/health', (req, res) => {
 
 
 // Serve static files (public frontend)
-const path = require("path");
-
 app.use(express.static(__dirname)); // phục vụ file tĩnh từ thư mục hiện tại
 
 // Fallback: nếu không match API thì trả về index.html (SPA)

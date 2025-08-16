@@ -545,13 +545,14 @@ app.get('/api/health', (req, res) => {
 });
 
 
-// Serve static files (frontend build)
-const buildPath = path.join(__dirname, 'dist');
-app.use(express.static(buildPath));
+// Serve static files (public frontend)
+const path = require("path");
 
-// Fallback: serve index.html for any route not starting with /api
+app.use(express.static(__dirname)); // phục vụ file tĩnh từ thư mục hiện tại
+
+// Fallback: nếu không match API thì trả về index.html (SPA)
 app.get(/^\/(?!api).*/, (req, res) => {
-  res.sendFile(path.join(buildPath, 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Start server

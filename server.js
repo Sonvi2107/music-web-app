@@ -401,30 +401,28 @@ app.get('/api/tracks/public', async (req, res) => {
 app.get('/api/tracks/:id/stream', authenticateToken, async (req, res) => {
   try {
     const track = await Track.findById(req.params.id);
-    
     if (!track) {
       return res.status(404).json({ error: 'Track not found' });
     }
-
     // Check if user has access (own track or public track)
     if (track.uploadedBy.toString() !== req.user.userId && !track.isPublic) {
       return res.status(403).json({ error: 'Access denied' });
     }
-
     // Increment play count
     track.playCount += 1;
     await track.save();
-
-    // Stream the file
     const filePath = track.filePath;
+    // Nếu là link Cloudinary thì redirect
+    if (filePath && filePath.startsWith('http')) {
+      return res.redirect(filePath);
+    }
+    // Nếu là file local thì stream như cũ
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'Audio file not found' });
     }
-
     const stat = fs.statSync(filePath);
     const fileSize = stat.size;
     const range = req.headers.range;
-
     if (range) {
       // Support range requests for seeking
       const parts = range.replace(/bytes=/, "").split("-");

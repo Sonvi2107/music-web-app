@@ -9,44 +9,44 @@ class DiscoveryManager {
   init() {
     // Load discovery tracks when page loads
     this.loadDiscoveryTracks();
-    
+
     // Bind refresh button
     if (this.refreshBtn) {
       this.refreshBtn.onclick = () => this.loadDiscoveryTracks();
     }
-    
+
     // Auto refresh every 5 minutes
     setInterval(() => this.loadDiscoveryTracks(), 5 * 60 * 1000);
   }
 
   async loadDiscoveryTracks() {
     if (!this.discoveryContainer) return;
-    
+
     try {
       this.discoveryContainer.innerHTML = '<div class="loading-message">Đang tải nhạc từ cộng đồng...</div>';
-      
+
       // Check if API client is available
       if (!window.apiClient) {
         this.showEmptyState('Cần kết nối MongoDB để xem nhạc từ cộng đồng');
         return;
       }
-      
+
       // Fetch public tracks
       const response = await window.apiClient.getPublicTracks({
         limit: 12,
         page: 1
       });
-      
+
       const tracks = response.tracks || [];
-      
+
       if (tracks.length === 0) {
         this.showEmptyState('Chưa có nhạc công khai nào từ cộng đồng');
         return;
       }
-      
+
       // Display tracks
       this.displayTracks(tracks);
-      
+
     } catch (error) {
       console.error('Failed to load discovery tracks:', error);
       this.showEmptyState('Không thể tải nhạc từ cộng đồng');
@@ -65,6 +65,8 @@ class DiscoveryManager {
             <span class="discovery-track-uploader">
               bởi ${track.uploadedBy?.displayName || track.uploadedBy?.username}
             </span>
+            ${track.album ? `<span class="discovery-track-album">💿 ${track.album}</span>` : ''}
+            ${track.genre ? `<span class="discovery-track-genre">#${track.genre}</span>` : ''}
           </div>
         </div>
         <div class="discovery-track-actions">
@@ -77,7 +79,7 @@ class DiscoveryManager {
         </div>
       </div>
     `).join('');
-    
+
     this.discoveryContainer.innerHTML = tracksHTML;
   }
 
@@ -98,9 +100,9 @@ class DiscoveryManager {
         search: '',
         limit: 100
       });
-      
+
       console.log('📊 Public tracks response:', response);
-      
+
       const track = response.tracks.find(t => t._id === trackId);
       if (!track) {
         throw new Error('Track not found');
@@ -111,7 +113,7 @@ class DiscoveryManager {
       // Create track object for player
       const streamUrl = window.apiClient.getStreamUrl(trackId);
       console.log('🔗 Stream URL:', streamUrl);
-      
+
       const playableTrack = {
         id: `mongo_${trackId}`,
         title: track.title,
@@ -158,12 +160,12 @@ class DiscoveryManager {
         search: '',
         limit: 100
       });
-      
+
       const track = response.tracks.find(t => t._id === trackId);
       if (!track) {
         throw new Error('Track not found');
       }
-      
+
       console.log('📀 Adding track to library:', track);
 
       // Create local track reference
@@ -181,41 +183,47 @@ class DiscoveryManager {
         uploadedBy: track.uploadedBy?.displayName || track.uploadedBy?.username
       };
 
-      // Add to IndexedDB and user library
-      if (window.idb && window.idb.putTrack) {
-        await window.idb.putTrack(localTrack);
-      } else {
-        console.warn('IndexedDB not available, track will only be playable in current session');
-      }
-      
-      if (window.data && window.data.get) {
-        const userData = window.data.get(window.currentUser || 'guest');
-        if (userData && !userData.library.includes(localTrack.id)) {
-          userData.library.push(localTrack.id);
-          window.data.set(window.currentUser || 'guest', userData);
+      // Đảm bảo id hợp lệ trước khi thêm vào IndexedDB và library
+      if (localTrack.id && typeof localTrack.id === 'string' && localTrack.id.trim()) {
+        if (window.idb && window.idb.putTrack) {
+          await window.idb.putTrack(localTrack);
+        } else {
+          console.warn('IndexedDB not available, track will only be playable in current session');
+        }
+
+        if (window.data && window.data.get) {
+          const userData = window.data.get(window.currentUser || 'guest');
+          if (userData && Array.isArray(userData.library) && !userData.library.includes(localTrack.id)) {
+            userData.library.push(localTrack.id);
+            window.data.set(window.currentUser || 'guest', userData);
+          }
+        } else {
+          console.warn('Data storage not available');
+        }
+
+        console.log('✅ Track added to library and data updated');
+
+        // Refresh main library
+        if (window.currentUI && window.currentUI.renderLibrary) {
+          window.currentUI.renderLibrary();
         }
       } else {
-        console.warn('Data storage not available');
-      }
-      
-      console.log('✅ Track added to library and data updated');
-
-      // Refresh main library
-      if (window.currentUI && window.currentUI.renderLibrary) {
-        window.currentUI.renderLibrary();
+        console.error('❌ Invalid localTrack.id, skip adding to library');
+        if (window.toast) window.toast('Không thể thêm track: ID không hợp lệ');
+        return;
       }
 
       if (window.toast) {
         window.toast(`✅ Đã thêm "${track.title}" vào thư viện!`);
       }
-      
+
     } catch (error) {
       console.error('❌ Failed to add track to library:', error);
       if (window.toast) {
         window.toast('❌ Không thể thêm nhạc vào thư viện');
       }
     }
-  }  formatDuration(seconds) {
+  } formatDuration(seconds) {
     if (!seconds) return '0:00';
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);

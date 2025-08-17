@@ -151,6 +151,7 @@
           <h2>Playlist</h2>
           <button class="btn" id="btn-create-playlist"><img src="assets/icons/add.svg" width="16" height="16" />
             Playlist mới</button>
+          <button class="btn ghost" id="btn-sync-playlists"><img src="assets/icons/cloud.svg" width="16" height="16" /> Đồng bộ lên DB</button>
         </div>
         <div class="cards" id="playlist-cards"></div>
         <div style="text-align:right; margin:8px 0;">
@@ -165,10 +166,11 @@
             </div>
             <div style="display:flex; gap:8px;">
               <button class="btn secondary" id="pl-play-all">Phát tất cả</button>
+              <button class="btn ghost" id="pl-refresh"><img src="assets/icons/refresh.svg" width="16" height="16" /> Làm mới</button>
               <button class="btn ghost" id="pl-delete"><img src="assets/icons/delete.svg" width="16" height="16" />
                 Xóa</button>
-              <button class="btn ghost" id="pl-share"><img src="assets/icons/share.svg" width="16" height="16" /> Chia
-                sẻ</button>
+              <button class="btn ghost" id="pl-share"><img src="assets/icons/share.svg" width="16" height="16" /> Chia sẻ</button>
+              <button class="btn ghost" id="pl-save-db"><img src="assets/icons/cloud.svg" width="16" height="16" /> Lưu lên DB</button>
             </div>
           </div>
           <table id="pl-table">
@@ -324,6 +326,8 @@
   <script type="module" src="scripts/history.js"></script>
   <script type="module" src="scripts/sleep-timer.js"></script>
   <script type="module" src="scripts/dragdrop.js"></script>
+  <script type="module" src="scripts/import-playlist.js"></script>
+  <script type="module" src="scripts/sync-playlists.js"></script>
 </body>
 
 </html>

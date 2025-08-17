@@ -1,3 +1,6 @@
+// server.js - Node.js Backend với MongoDB
+require('dotenv').config(); 
+
 // Cloudinary config
 const cloudinary = require('cloudinary').v2;
 cloudinary.config({
@@ -5,9 +8,6 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
-
-// server.js - Node.js Backend với MongoDB
-require('dotenv').config(); 
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -546,8 +546,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-
-
 // Route / trả về index.html (rõ ràng cho Railway)
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
@@ -556,6 +554,69 @@ app.get("/", (req, res) => {
 // Fallback: cho SPA, mọi route không phải /api đều trả về index.html
 app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// --- PLAYLIST ROUTES (must be after all models, app, and middleware) ---
+
+// Save playlist to MongoDB (sync from local)
+app.post('/api/playlists', authenticateToken, async (req, res) => {
+  try {
+    const { name, description, tracks, isPublic, thumbnail } = req.body;
+    if (!name || !Array.isArray(tracks)) {
+      return res.status(400).json({ error: 'Invalid playlist data' });
+    }
+    // Map track IDs if they are objects
+    const trackIds = tracks.map(t => typeof t === 'string' ? t : t.id || t._id).filter(Boolean);
+    const playlist = new Playlist({
+      name,
+      description: description || '',
+      createdBy: req.user.userId,
+      tracks: trackIds,
+      isPublic: !!isPublic,
+      thumbnail: thumbnail || ''
+    });
+    await playlist.save();
+    res.status(201).json({
+      message: 'Playlist saved to DB',
+      playlist: {
+        id: playlist._id,
+        name: playlist.name,
+        description: playlist.description,
+        tracks: playlist.tracks,
+        isPublic: playlist.isPublic,
+        thumbnail: playlist.thumbnail,
+        createdAt: playlist.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Save playlist error:', error);
+    res.status(500).json({ error: 'Failed to save playlist' });
+  }
+});
+
+// Public API: Get playlist by ID (for sharing)
+app.get('/api/playlists/:id', async (req, res) => {
+  try {
+    const playlist = await Playlist.findById(req.params.id)
+      .populate('createdBy', 'username displayName')
+      .populate('tracks');
+    if (!playlist) return res.status(404).json({ error: 'Playlist not found' });
+    // Only allow public playlists to be shared
+    if (!playlist.isPublic) return res.status(403).json({ error: 'Playlist is not public' });
+    res.json({
+      id: playlist._id,
+      name: playlist.name,
+      description: playlist.description,
+      createdBy: playlist.createdBy,
+      tracks: playlist.tracks,
+      isPublic: playlist.isPublic,
+      thumbnail: playlist.thumbnail,
+      createdAt: playlist.createdAt,
+      updatedAt: playlist.updatedAt
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Start server

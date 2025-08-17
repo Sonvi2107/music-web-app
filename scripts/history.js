@@ -31,6 +31,11 @@ export function showHistoryModal() {
   if (history.length === 0) {
     historyList.innerHTML = '<p style="text-align:center; color:var(--muted); padding:20px;">Chưa có lịch sử nghe nhạc</p>';
   } else {
+    // Lấy top 3 bài nghe nhiều nhất
+    const topTracks = [...history]
+      .sort((a, b) => b.playCount - a.playCount || b.playedAt - a.playedAt)
+      .slice(0, 3);
+
     historyList.innerHTML = `
       <div style="margin-bottom:16px;">
         <h3 style="margin-bottom:8px;">Gần đây</h3>
@@ -48,11 +53,13 @@ export function showHistoryModal() {
       </div>
       <div>
         <h3 style="margin-bottom:8px;">Gợi ý cho bạn</h3>
-        <p style="color:var(--muted); font-size:13px;">Dựa trên lịch sử nghe, chúng tôi nghĩ bạn sẽ thích:</p>
-        <div style="padding:8px; border:1px solid var(--brand); border-radius:8px; margin-top:8px;">
-          <div style="font-weight:600;">Nhạc thư giãn - 440Hz Healing</div>
-          <div style="color:var(--muted); font-size:13px;">Tương tự Âm 440Hz (Demo) mà bạn đã nghe</div>
-        </div>
+        <p style="color:var(--muted); font-size:13px;">Top 3 bài bạn nghe nhiều nhất:</p>
+        ${topTracks.map(item => `
+          <div style="padding:8px; border:1px solid var(--brand); border-radius:8px; margin-top:8px; margin-bottom:8px;">
+            <div style="font-weight:600;">${item.title}</div>
+            <div style="color:var(--muted); font-size:13px;">${item.artist} • Phát ${item.playCount} lần</div>
+          </div>
+        `).join('')}
       </div>
     `;
   }

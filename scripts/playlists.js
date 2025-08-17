@@ -17,8 +17,14 @@ export function PlaylistsUI(player) {
   }
   async function removeFromCurrent(tid) { const d = getData(); const pl = d.playlists[currentId]; if (!pl) return; pl.trackIds = pl.trackIds.filter(x => x !== tid); saveData(d); openDetail(currentId); toast('Đã xoá khỏi playlist'); }
   function bindDetailActions() {
-    playAllBtn.onclick = async () => { const d = getData(); const pl = d.playlists[currentId]; if (!pl) return; player.playTracksByIds(user, pl.trackIds, 0); }; deleteBtn.onclick = async () => { if (!(await confirmDialog('Xoá playlist này?'))) return; const d = getData(); delete d.playlists[currentId]; saveData(d); detail.hidden = true; renderCards(); toast('Đã xoá playlist'); };
+    playAllBtn.onclick = async () => { const d = getData(); const pl = d.playlists[currentId]; if (!pl) return; player.playTracksByIds(user, pl.trackIds, 0); };
+    deleteBtn.onclick = async () => { if (!(await confirmDialog('Xoá playlist này?'))) return; const d = getData(); delete d.playlists[currentId]; saveData(d); detail.hidden = true; renderCards(); toast('Đã xoá playlist'); };
     plTableBody.addEventListener('drop', () => { const ids = Array.from(plTableBody.querySelectorAll('tr')).map(tr => tr.dataset.id); const d = getData(); d.playlists[currentId].trackIds = ids; saveData(d); openDetail(currentId); });
+    // Nút làm mới playlist detail
+    const refreshBtn = document.getElementById('pl-refresh');
+    if (refreshBtn) {
+      refreshBtn.onclick = () => openDetail(currentId);
+    }
   }
   async function addTracksToPlaylist(plId, trackIds) { const d = getData(); const pl = d.playlists[plId]; if (!pl) return; pl.trackIds.push(...trackIds); saveData(d); toast(`Đã thêm ${trackIds.length} bài vào ${pl.name}`); }
   function createPlaylist(name = 'Playlist mới') { const d = getData(); const id = uid(); d.playlists[id] = { id, name, trackIds: [], createdAt: Date.now() }; saveData(d); renderCards(); return id; }

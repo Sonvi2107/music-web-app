@@ -1,5 +1,6 @@
 
 import { $, $$, toast, formatTime, uid } from './utils.js';
+export const showToast = toast;
 import { idb, data } from './storage.js';
 import { showOnlineSearchModal } from './online-search.js';
 import { showHistoryModal } from './history.js';
@@ -16,9 +17,13 @@ export function UI(player, playlists) {
     const localTracks = [];
     
     // Get local tracks
-    for (const id of d.library) { 
-      const t = await idb.getTrack(id); 
-      if (t) localTracks.push({...t, source: 'local'}); 
+    for (const id of d.library) {
+      if (id && typeof id === 'string' && id.trim()) {
+        const t = await idb.getTrack(id);
+        if (t) localTracks.push({ ...t, source: 'local' });
+      } else {
+        console.warn('renderLibrary: Bỏ qua id không hợp lệ:', id);
+      }
     }
     
     // Get MongoDB tracks if logged in

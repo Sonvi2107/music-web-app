@@ -1,9 +1,3 @@
-body.dark-mode svg,
-body.dark-mode .icon-btn svg,
-body.dark-mode .nav-btn svg {
-  fill: #fff !important;
-  color: #fff !important;
-}
 :root {
   --bg: #0e0f13;
   --bg-soft: #151823;
@@ -516,15 +510,16 @@ input[type=range] {
 .modal {
   position: fixed;
   inset: 0;
-  display: none;
-  place-items: center;
+    display: none;
+    justify-content: center;
+    align-items: center;
   background: rgba(0, 0, 0, .45);
   backdrop-filter: blur(4px);
   z-index: 1000;
 }
 
 .modal.show {
-  display: grid;
+  display: flex;
   animation: in .2s ease;
 }
 
@@ -543,7 +538,7 @@ input[type=range] {
   border-radius: 16px;
   padding: 18px;
   box-shadow: var(--shadow);
-  transform: translateY(6px);
+  /* transform: translateY(6px); */
   animation: rise .25s ease forwards;
 }
 

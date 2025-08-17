@@ -1,4 +1,3 @@
-
 import { $, $$, formatTime, uid, toast } from './utils.js';
 import { idb, data } from './storage.js';
 import { youtubePlayer } from './youtube-player.js';
@@ -224,17 +223,48 @@ export const Player = () => {
       state.isYouTube = false;
     }
     
-    state.idx = idx; 
-    const track = state.queue[state.idx]; 
+    state.idx = idx;
+    const track = state.queue[state.idx];
     updateNow(track);
-    
+
+    // --- Update listening history ---
     try {
-      const url = await loadTrackBlobURL(track); 
+      let history = [];
+      try {
+        history = JSON.parse(localStorage.getItem('flowplay.listening-history')) || [];
+      } catch {}
+      // Kiểm tra xem bài đã có trong lịch sử chưa
+      let existed = history.find(item => item.title === track.title && item.artist === track.artist);
+      if (existed) {
+        // Xóa entry cũ
+        history = history.filter(item => item !== existed);
+        // Tăng playCount
+        existed.playCount = (existed.playCount || 1) + 1;
+        existed.playedAt = Date.now();
+        // Thêm lên đầu
+        history.unshift(existed);
+      } else {
+        // Thêm mới
+        history.unshift({
+          title: track.title,
+          artist: track.artist,
+          playedAt: Date.now(),
+          playCount: 1
+        });
+      }
+      // Limit history to 30 items
+      if (history.length > 30) history = history.slice(0, 30);
+      localStorage.setItem('flowplay.listening-history', JSON.stringify(history));
+    } catch (e) { console.warn('Không thể lưu lịch sử nghe:', e); }
+    // --- End update history ---
+
+    try {
+      const url = await loadTrackBlobURL(track);
       if (!url) {
         toast('Không thể tải bài hát này');
         return;
       }
-      
+
       if (url === 'youtube://loaded') {
         // YouTube track loaded successfully
         playIcon.src = 'assets/icons/pause.svg';
@@ -243,7 +273,7 @@ export const Player = () => {
       } else {
         // Regular audio file
         console.log('🎵 Setting audio source:', url);
-        
+
         // Add error listener before setting source
         audio.onerror = function(e) {
           console.error('Audio error event:', e);
@@ -267,8 +297,8 @@ export const Player = () => {
           }
           toast('Không thể tải file âm thanh này');
         };
-        
-        audio.src = url; 
+
+        audio.src = url;
         const playPromise = audio.play();
         if (playPromise) {
           playPromise.catch(err => {

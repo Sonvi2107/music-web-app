@@ -29,6 +29,9 @@ async function onLoggedIn(username) {
   document.getElementById('audio').volume = parseFloat(document.getElementById('volume').value);
   document.getElementById('hello-name').textContent = d.settings.name || username;
 
+  // Đảm bảo session.current() luôn đúng user
+  session.set({ username });
+
   // Logout for local storage system (fallback)
   document.getElementById('btn-logout').onclick = () => {
     // Handle both MongoDB logout and local storage

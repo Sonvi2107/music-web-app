@@ -17,6 +17,25 @@ async function onLoggedIn(username) {
   // Set global current user for other scripts
   window.currentUser = username;
 
+  // Nếu đã đăng nhập MongoDB, đồng bộ playlist từ DB về local
+  if (window.apiClient && window.apiClient.isLoggedIn()) {
+    try {
+      const res = await window.apiClient.getMyPlaylists();
+      if (res && Array.isArray(res.playlists)) {
+        // Chuyển mảng playlist về object {id: playlist}
+        const playlistsObj = {};
+        for (const pl of res.playlists) {
+          playlistsObj[pl.id || pl._id] = pl;
+        }
+        const d = data.get(username);
+        d.playlists = playlistsObj;
+        data.set(username, d);
+      }
+    } catch (e) {
+      console.warn('Không thể đồng bộ playlist từ DB:', e);
+    }
+  }
+
   player.setUser(username);
   playlists.setUser(username);
   ui.setUser(username);

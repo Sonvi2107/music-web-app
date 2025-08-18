@@ -11,18 +11,16 @@ const player = Player();
 const playlists = PlaylistsUI(player);
 const ui = UI(player, playlists);
 window.currentUI = ui;
-window.player = player; // Make player available globally
+window.player = player; 
 
 async function onLoggedIn(username) {
-  // Set global current user for other scripts
+
   window.currentUser = username;
 
-  // Nếu đã đăng nhập MongoDB, đồng bộ playlist từ DB về local
   if (window.apiClient && window.apiClient.isLoggedIn()) {
     try {
       const res = await window.apiClient.getMyPlaylists();
       if (res && Array.isArray(res.playlists)) {
-        // Chuyển mảng playlist về object {id: playlist}
         const playlistsObj = {};
         for (const pl of res.playlists) {
           playlistsObj[pl.id || pl._id] = pl;
@@ -48,12 +46,9 @@ async function onLoggedIn(username) {
   document.getElementById('audio').volume = parseFloat(document.getElementById('volume').value);
   document.getElementById('hello-name').textContent = d.settings.name || username;
 
-  // Đảm bảo session.current() luôn đúng user
   session.set({ username });
 
-  // Logout for local storage system (fallback)
   document.getElementById('btn-logout').onclick = () => {
-    // Handle both MongoDB logout and local storage
     if (window.authUI) {
       window.authUI.handleLogout();
     } else {
@@ -77,17 +72,13 @@ async function onLoggedIn(username) {
 }
 
 function init() {
-  // Check local storage session (for backward compatibility)
   const s = session.current();
   if (s?.username) {
     onLoggedIn(s.username);
   } else {
-    // No auto-login modal anymore - user can choose to login via MongoDB
-    // Just initialize with guest mode for local features
     onLoggedIn('guest');
   }
   
-  // Bind sync playlists button
   document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('btn-sync-playlists');
     if (btn) {
@@ -166,5 +157,4 @@ async function savePlaylistToDB() {
   }
 }
 
-// Add button handler for saving playlist to DB (add a button with id="pl-save-db" in your HTML)
 $('#pl-save-db')?.addEventListener('click', savePlaylistToDB);

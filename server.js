@@ -558,6 +558,18 @@ app.get(/^\/(?!api).*/, (req, res) => {
 
 // --- PLAYLIST ROUTES (must be after all models, app, and middleware) ---
 
+// Get all playlists of current user
+app.get('/api/playlists/my', authenticateToken, async (req, res) => {
+  try {
+    const playlists = await Playlist.find({ createdBy: req.user.userId })
+      .sort({ createdAt: -1 });
+    res.json({ playlists });
+  } catch (error) {
+    console.error('Get my playlists error:', error);
+    res.status(500).json({ error: 'Failed to fetch playlists' });
+  }
+});
+
 // Save playlist to MongoDB (sync from local)
 app.post('/api/playlists', authenticateToken, async (req, res) => {
   try {

@@ -54,6 +54,10 @@ function bindProfileUI() {
     const newPass = document.getElementById('profile-newpass').value;
     try {
       if (name || newAva) profile.updateProfile({ name, avatar: newAva });
+      // Gọi API lưu avatar lên DB nếu đã đăng nhập MongoDB
+      if (window.apiClient && window.apiClient.isLoggedIn() && (name || newAva)) {
+        await window.apiClient.updateProfile({ displayName: name, avatar: newAva });
+      }
       if (oldPass && newPass) await profile.changePassword(oldPass, newPass);
 
       const avatarEl = document.getElementById('avatar');

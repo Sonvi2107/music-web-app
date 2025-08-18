@@ -39,7 +39,14 @@ function showImportPlaylistModal() {
       const res = await fetch(`/api/playlists/${id}`);
       if (!res.ok) throw new Error('Không tìm thấy playlist.');
       const playlist = await res.json();
-      // Save to user's playlists (local or DB)
+      // Đảm bảo tracks là mảng id string, loại bỏ tiền tố mongo_ nếu có, không phải stringified array
+      if (playlist.tracks && Array.isArray(playlist.tracks)) {
+        playlist.tracks = playlist.tracks.map(t => {
+          let id = typeof t === 'string' ? t : t.id || t._id;
+          if (typeof id === 'string' && id.startsWith('mongo_')) id = id.replace('mongo_', '');
+          return id;
+        }).filter(Boolean);
+      }
       await savePlaylist(playlist);
       status.textContent = 'Đã nhập playlist thành công!';
       showToast('Đã nhập playlist!', 'success');

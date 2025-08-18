@@ -14,7 +14,14 @@ export async function syncAllPlaylistsToDB() {
   let ok = 0, fail = 0;
   for (const pl of playlists) {
     try {
-      const tracks = (pl.trackIds || []).map(t => typeof t === 'string' ? t : t.id || t._id).filter(Boolean);
+      // Đảm bảo tracks là mảng id string, loại bỏ tiền tố mongo_ nếu có
+      const tracks = (pl.trackIds || [])
+        .map(t => {
+          let id = typeof t === 'string' ? t : t.id || t._id;
+          if (typeof id === 'string' && id.startsWith('mongo_')) id = id.replace('mongo_', '');
+          return id;
+        })
+        .filter(Boolean);
       await savePlaylist({
         name: pl.name,
         description: pl.description || '',

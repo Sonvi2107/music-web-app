@@ -19,9 +19,10 @@ export function PlaylistsUI(player) {
       const trackIds = Array.isArray(pl.trackIds) ? pl.trackIds : (Array.isArray(pl.tracks) ? pl.tracks.map(t => (typeof t === 'string' ? t : t._id || t.id)) : []);
       const card = document.createElement('div');
       card.className = 'card';
-      card.innerHTML = `<div class="cover">${pl.name.slice(0, 2).toUpperCase()}</div><div class="meta"><div><div class="title">${pl.name}</div><div class="muted">${trackIds.length} bài</div></div><button class="btn secondary" data-id="${pl.id}">Mở</button></div>`;
+      // Đảm bảo luôn dùng id thực tế của playlist (id key trong object)
+      card.innerHTML = `<div class="cover">${pl.name.slice(0, 2).toUpperCase()}</div><div class="meta"><div><div class="title">${pl.name}</div><div class="muted">${trackIds.length} bài</div></div><button class="btn secondary" data-id="${id}">Mở</button></div>`;
       cardsC.appendChild(card);
-      card.querySelector('button').onclick = () => openDetail(pl.id);
+      card.querySelector('button').onclick = () => openDetail(id);
     });
   }
   async function openDetail(id) {

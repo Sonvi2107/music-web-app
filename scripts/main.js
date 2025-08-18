@@ -23,9 +23,19 @@ async function onLoggedIn(username) {
       if (res && Array.isArray(res.playlists)) {
         const playlistsObj = {};
         for (const pl of res.playlists) {
-          playlistsObj[pl.id || pl._id] = pl;
+          // Đảm bảo luôn có trackIds là mảng id string
+          let trackIds = [];
+          if (Array.isArray(pl.trackIds)) {
+            trackIds = pl.trackIds;
+          } else if (Array.isArray(pl.tracks)) {
+            trackIds = pl.tracks.map(t => (typeof t === 'string' ? t : t._id || t.id)).filter(Boolean);
+          }
+          playlistsObj[pl.id || pl._id] = { ...pl, trackIds };
         }
         const d = data.get(username);
+        // Xóa toàn bộ playlists local trước khi ghi đè từ DB
+        d.playlists = {};
+        // Ghi đè bằng playlistsObj từ DB
         d.playlists = playlistsObj;
         data.set(username, d);
       }
